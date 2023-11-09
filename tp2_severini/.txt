@@ -1,0 +1,37 @@
+0- Mejorar pre y post 
+
+
+1.50-las funciones no pueden tener mas de 40 lineas aprox (generar_huerta, realizar_jugada, imprimir_terreno)
+
+
+2.00-En aplicar_insecticida mejorar eliminacion de plaga
+
+
+????-El juego tiene problemas cuando se quiere cosechar algo. Cuando se pasa por arriba no lo guarda en la canasta. ???????
+
+plaga se superpone con espinas
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+0- Srand (( unsigned)time(NULL)); tiene q estar en el main una sola vez
+
+0- inicializar monedas en 0 
+
+0- Constantes de monedas iniciales,costo de plantar cada verdura y algunas otras cosas 
+
+0- Ojo con la indentación en los switch, el break tiene que estar a la misma altura que el bloque de código del case.
+
+0.50-En cultivar, no te estás fijando que la cantidad de monedas le alcancen para plantar la verdura
+
+1.00-No poner return adentro de un for. tendrías que hacer un while en vez del for y o no poner el return, sino que guardar el true o false en una variable
+
+1.00-MEJORAR O CAMBIAR GENERAR_HUERTA:-no hace falta inicializar el cultivo en la posicion 4
+
+1.00-MEJORAR O CAMBIAR GENERAR_HUERTA:-No se puede cortar un for con un break(generar_huerta) cambiar por un while
+
+1.00-en inicializar_juego no estás inicializando en 0 el tope de los objetos ni el tope de los cultivos ni el tope de la canasta
+
+1.50-El movimiento_plantado tiene que ser el movimiento en el cual se cultivó la planta, es decir juego→movimientos,
+y después para fijarte si se puede cosechar te fijas que la cantidad de movimientos actuales menos el movimiento plantado
+sea mayor o igual a la cant de movimientos para cosechar y menor a la vida en total (porque en ese caso ya está podrido).
+(no sumarle a juego→movimientos sino q restarle movimiento_plantado y luego con la resta fijarse si esta listo )
