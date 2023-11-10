@@ -1,16 +1,14 @@
 0- Mejorar pre y post 
 
 
-1.50-las funciones no pueden tener mas de 40 lineas aprox (generar_huerta, realizar_jugada, imprimir_terreno)
+1.00-las funciones no pueden tener mas de 40 lineas aprox (generar_huerta, realizar_jugada, imprimir_terreno)
 
 1.50-segmentation fall al iniciar las huertas o terreno
 
-2.00-En aplicar_insecticida mejorar eliminacion de plaga
-
+CHEQUEAR - plaga se superpone con espinas
 
 ????-El juego tiene problemas cuando se quiere cosechar algo. Cuando se pasa por arriba no lo guarda en la canasta. ???????
 
-plaga se superpone con espinas
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
@@ -36,3 +34,6 @@ plaga se superpone con espinas
 y después para fijarte si se puede cosechar te fijas que la cantidad de movimientos actuales menos el movimiento plantado
 sea mayor o igual a la cant de movimientos para cosechar y menor a la vida en total (porque en ese caso ya está podrido).
 (no sumarle a juego→movimientos sino q restarle movimiento_plantado y luego con la resta fijarse si esta listo )
+
+2.00-En aplicar_insecticida mejorar eliminacion de plaga
+
