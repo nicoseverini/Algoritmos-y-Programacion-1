@@ -3,6 +3,7 @@
 
 1.50-las funciones no pueden tener mas de 40 lineas aprox (generar_huerta, realizar_jugada, imprimir_terreno)
 
+1.50-segmentation fall al iniciar las huertas o terreno
 
 2.00-En aplicar_insecticida mejorar eliminacion de plaga
 
