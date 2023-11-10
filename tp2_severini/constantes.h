@@ -26,6 +26,8 @@
 #define MOVER_IZQUIERDA 'A'
 #define MOVER_ABAJO 'S'
 #define MOVER_DERECHA 'D'
+#define MAX_DISTANCIA_CUADRADO 16
+#define LIMITE_MAPA 19
 #define BLANCANIEVES 'S'
 #define CULTIVO_VACIO 'C'
 #define DEPOSITO 'D'

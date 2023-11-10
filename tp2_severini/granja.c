@@ -48,16 +48,14 @@ void generar_huerta(juego_t* juego,int huerta_index, bool posicion_ocupada[MAX_C
   bool posicion_valida = false;
   while (!posicion_valida){
     generar_posicion(&(juego->huertas[huerta_index].cultivos[0].posicion));
-
-    // Comprueba si la posición del centro está demasiado cerca de algún otro huerto
     posicion_valida = true;
     int j = 0;
     while (j < huerta_index && posicion_valida){
-      //(i-j)²+(i-j)²
+
       int distancia_cuadrado = (juego->huertas[huerta_index].cultivos[0].posicion.fila - juego->huertas[j].cultivos[0].posicion.fila) * (juego->huertas[huerta_index].cultivos[0].posicion.fila - juego->huertas[j].cultivos[0].posicion.fila) +
       (juego->huertas[huerta_index].cultivos[0].posicion.columna - juego->huertas[j].cultivos[0].posicion.columna) * (juego->huertas[huerta_index].cultivos[0].posicion.columna - juego->huertas[j].cultivos[0].posicion.columna);
       
-      if (distancia_cuadrado < 16){
+      if (distancia_cuadrado < MAX_DISTANCIA_CUADRADO){
         posicion_valida = false;  
       }
       j++;
@@ -71,13 +69,18 @@ void generar_huerta(juego_t* juego,int huerta_index, bool posicion_ocupada[MAX_C
       int posicion_fila = fila_centro + fila;
       int posicion_columna = columna_centro + columna;
 
-      posicion_ocupada[posicion_fila][posicion_columna] = true;
+      if (posicion_fila >= 0 && posicion_fila < MAX_FIL_TERRENO && posicion_columna >= 0 && posicion_columna < MAX_COL_TERRENO){
 
-      juego->huertas[huerta_index].cultivos[(fila + 1) * 3 + (columna + 1)].posicion.fila = posicion_fila;
-      juego->huertas[huerta_index].cultivos[(fila + 1) * 3 + (columna + 1)].posicion.columna = posicion_columna;
-      juego->huertas[huerta_index].cultivos[(fila + 1) * 3 + (columna + 1)].tipo = CULTIVO_VACIO;
+        posicion_ocupada[posicion_fila][posicion_columna] = true;
+
+        juego->huertas[huerta_index].cultivos[juego->huertas->tope_cultivos].posicion.fila = posicion_fila;
+        juego->huertas[huerta_index].cultivos[juego->huertas->tope_cultivos].posicion.columna = posicion_columna;
+        juego->huertas[huerta_index].cultivos[juego->huertas->tope_cultivos].tipo = CULTIVO_VACIO;
+        juego->huertas->tope_cultivos++;
+      }
     }
   }
+  juego->huertas->tope_cultivos = 0;
 }
 /*
   Pre:
@@ -112,7 +115,7 @@ void mover_personaje(juego_t* juego, char accion, bool* accion_realizada){
       }
       break;
     case MOVER_ABAJO:
-      if ((juego->jugador.posicion.fila) != 19 ){
+      if ((juego->jugador.posicion.fila) != LIMITE_MAPA ){
         (juego->jugador.posicion.fila)++;
         (juego->movimientos)++;
         *accion_realizada = true;
@@ -126,7 +129,7 @@ void mover_personaje(juego_t* juego, char accion, bool* accion_realizada){
       }
       break;
     case MOVER_DERECHA:
-      if ((juego->jugador.posicion.columna) != 19 ){
+      if ((juego->jugador.posicion.columna) != LIMITE_MAPA ){
         (juego->jugador.posicion.columna)++;
         (juego->movimientos)++;
         *accion_realizada = true;
@@ -458,6 +461,7 @@ void inicializar_juego(juego_t* juego, char enanito){
   
   for (int i = 0; i < MAX_HUERTA; i++){
     generar_huerta(juego, i, posicion_ocupada);
+    juego->huertas[i].plagado = false;
   }
 
   for (int i = 0; i < TOPE_ESPINAS; i++){
@@ -502,7 +506,6 @@ void realizar_jugada(juego_t* juego, char accion){
   if (juego->movimientos % 10 == 0 && accion_realizada){
     if (hay_plaga){
       eliminar_objeto(juego, posicion_plaga(juego));
-      printf("\n\n\n\n\n\n holholholholholh");
     }
     juego->objetos[juego->tope_objetos].tipo = PLAGAS;
     generar_posicion(&(juego->objetos[juego->tope_objetos].posicion));
@@ -600,7 +603,7 @@ void imprimir_terreno(juego_t juego){
   mostrar_canasta(juego);
 
   inicializar_terreno_juego(terreno_juego, tope_fil_terreno, tope_col_terreno);
-
+  //cargar_terreno_juego
   for (int i = 0; i < MAX_HUERTA; i++){
     for (int j = 0; j < MAX_PLANTAS; j++){
       if(juego.huertas[i].cultivos[j].posicion.fila >= 0 && juego.huertas[i].cultivos[j].posicion.fila < MAX_FIL_TERRENO &&
@@ -636,7 +639,7 @@ void imprimir_terreno(juego_t juego){
   terreno_juego[juego.jugador.posicion.fila][juego.jugador.posicion.columna] = BLANCANIEVES;
 
   imprimir_terreno_juego(terreno_juego, tope_fil_terreno, tope_col_terreno);
-
+  //informar_pesonaje
   for (int i = 0; i < MAX_HUERTA; i++){
     for (int j = 0; j < MAX_PLANTAS; j++){
       if (posiciones_iguales(juego.jugador.posicion, juego.huertas[i].cultivos[j].posicion)){ 
