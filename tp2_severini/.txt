@@ -1,11 +1,11 @@
+
 1.00- Mejorar pre y post 
 
 1.00-las funciones no pueden tener mas de 40 lineas aprox (generar_huerta, realizar_jugada, imprimir_terreno)
 
+1.00- cuando parte de las huertas quedan fuera en la posicion 0 me aparecen cultivos random
 
 ????-El juego tiene problemas cuando se quiere cosechar algo. Cuando se pasa por arriba no lo guarda en la canasta. ???????
-
-
 ------------------------------------------------------------------------------------------------------------------------------------
 
 0- Srand (( unsigned)time(NULL)); tiene q estar en el main una sola vez

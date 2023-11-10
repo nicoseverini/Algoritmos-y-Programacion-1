@@ -6,6 +6,19 @@
 #include "granja.h"
 //-----------------------------------------------inicializar-juego------------------------------------------------------------------------
 /*
+  pre
+  post
+*/
+void inicializar_variables(juego_t* juego){
+  juego->jugador.cant_monedas = 0;
+  juego->movimientos = 0;
+  juego->tope_objetos = 0;
+  juego->jugador.tope_canasta = 0;
+  juego->huertas->tope_cultivos = 0;
+  juego->jugador.tiene_fertilizante = false;
+  juego->jugador.cant_insecticidas = INCECTICIDAS_INICIALES;
+}
+/*
   Pre: -
   Post: La cantidad de monedas_iniciales en el juego incremento segun el tipo de enanito
 */
@@ -37,19 +50,15 @@ void generar_posicion(coordenada_t* posicion){
   posicion->fila = rand () % MAX_FIL_TERRENO; 
 }
 /*
-  Pre: 
-  - 0 <= huerta_index < MAX_HUERTAS
-  Post: 
-  - Generar posicion de una huerta de tipo 3x3 aleatoria dentro del terreno
-  - La huerta no se superpone con nunguna otra huerta
-  - Cada posicion de la matriz fue asignada como una posicion_ocupada = true
+  Pre
+  Post
 */
-void generar_huerta(juego_t* juego,int huerta_index, bool posicion_ocupada[MAX_COL_TERRENO][MAX_FIL_TERRENO]){
+void generar_centro_huerta(juego_t* juego, int huerta_index){
   bool posicion_valida = false;
   while (!posicion_valida){
-    generar_posicion(&(juego->huertas[huerta_index].cultivos[0].posicion));
-    posicion_valida = true;
-    int j = 0;
+  generar_posicion(&(juego->huertas[huerta_index].cultivos[0].posicion));
+  posicion_valida = true;
+  int j = 0;
     while (j < huerta_index && posicion_valida){
 
       int distancia_cuadrado = (juego->huertas[huerta_index].cultivos[0].posicion.fila - juego->huertas[j].cultivos[0].posicion.fila) * (juego->huertas[huerta_index].cultivos[0].posicion.fila - juego->huertas[j].cultivos[0].posicion.fila) +
@@ -61,8 +70,13 @@ void generar_huerta(juego_t* juego,int huerta_index, bool posicion_ocupada[MAX_C
       j++;
     }
   }
-  // Marca las posiciones del centro y el borde como ocupadas
-  int fila_centro = juego->huertas[huerta_index].cultivos[0].posicion.fila;
+}
+/*
+  pre
+  post
+*/
+void generar_bordes_huerta(juego_t* juego, int huerta_index, bool posicion_ocupada[MAX_COL_TERRENO][MAX_FIL_TERRENO]){
+    int fila_centro = juego->huertas[huerta_index].cultivos[0].posicion.fila;
   int columna_centro = juego->huertas[huerta_index].cultivos[0].posicion.columna;
   for (int fila = -1; fila <= 1; fila++){
     for (int columna = -1; columna <= 1; columna++){
@@ -363,40 +377,6 @@ bool posicion_ocupada_plaga(coordenada_t posicion, juego_t* juego){
   return ocupado;
 }
 /*
-  Pre: -
-  Post: Inicializa el terreno_juego en 0
-*/
-void inicializar_terreno_juego(char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRENO], int tope_fil_terreno, int tope_col_terreno){
-  for (int i = 0; i < tope_fil_terreno; i++) {
-  	for (int j = 0; j < tope_col_terreno; j++) {
-      terreno_juego[i][j] = 0;
-    }
-  }
-}
-/*
-  Pre: -
-  Post: Mustra en pantalla cada posicion del terreno_juego
-*/
-void imprimir_terreno_juego(char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRENO], int tope_fil_terreno, int tope_col_terreno){
-	for (int i = 0; i < tope_fil_terreno; i++) {
-	  for (int j = 0; j < tope_col_terreno; j++) {
-		  printf("[   %c\t]", terreno_juego[i][j]);
-	  }
-	  printf("\n");
-  }
-}
-/*
-  Pre: -
-  Post: Mostrar en pantalla los contenidos de juego.jugador.canasta
-*/
-void mostrar_canasta(juego_t juego){
-  printf("Canasta : [");
-  for (int i = 0; i < TOPE_CANASTA; i++){
-    printf(" %c", juego.jugador.canasta[i]);
-  }
-  printf(" ]\n");
-}
-/*
   Pre: Estar a distancia manhattan del deposito
   Post: Devuelve un cantidad de monedas segun el valor de una verdura espesifica 
 */
@@ -438,19 +418,128 @@ void cosechar(juego_t* juego,int i,int j){
   }
   juego->jugador.tope_canasta++;
 }
+/*
+  Pre
+  Post
+*/
+void mostrar_inventario(juego_t juego){
+  printf("Sus monedas son de : %i\n",juego.jugador.cant_monedas);
+  printf("Sus insecticidas son : %i\n",juego.jugador.cant_insecticidas);
+  printf("Sus movimientos son de : %i\n",juego.movimientos);
 
+  if (!(juego.jugador.tiene_fertilizante)){
+    printf("No tiene fertilizante disponible\n");
+  }else{
+    printf("Tiene fertilizante disponible\n");
+  }
+}
+/*
+  Pre: -
+  Post: Mostrar en pantalla los contenidos de juego.jugador.canasta
+*/
+void mostrar_canasta(juego_t juego){
+  printf("Canasta : [");
+  for (int i = 0; i < TOPE_CANASTA; i++){
+    printf(" %c", juego.jugador.canasta[i]);
+  }
+  printf(" ]\n");
+}
+/*
+  Pre: -
+  Post: Inicializa el terreno_juego en 0
+*/
+void inicializar_terreno_juego(char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRENO], int tope_fil_terreno, int tope_col_terreno){
+  for (int i = 0; i < tope_fil_terreno; i++) {
+  	for (int j = 0; j < tope_col_terreno; j++) {
+      terreno_juego[i][j] = 0;
+    }
+  }
+}
+/*
+  Pre
+  Post
+*/
+void cargar_terreno_juego(juego_t juego, char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRENO]){
+  for (int i = 0; i < MAX_HUERTA; i++){
+    for (int j = 0; j < MAX_PLANTAS; j++){
+      if(juego.huertas[i].cultivos[j].posicion.fila >= 0 && juego.huertas[i].cultivos[j].posicion.fila < MAX_FIL_TERRENO &&
+      juego.huertas[i].cultivos[j].posicion.columna >= 0 && juego.huertas[i].cultivos[j].posicion.columna < MAX_COL_TERRENO){
+        if (!(planta_crecida(juego, i, j))){
+          switch (juego.huertas[i].cultivos[j].tipo){
+            case TOMATE:
+              juego.huertas[i].cultivos[j].tipo = TOMATE_INMADURO;
+              break;
+            case ZANAHORIA:
+              juego.huertas[i].cultivos[j].tipo = ZANAHORIA_INMADURA;
+              break;
+            case BROCOLI:
+              juego.huertas[i].cultivos[j].tipo = BROCOLI_INMADURO;
+              break;
+            case LECHUGA:
+              juego.huertas[i].cultivos[j].tipo = LECHUGA_INMADURA;
+              break;
+
+          }
+        }
+        terreno_juego[juego.huertas[i].cultivos[j].posicion.fila][juego.huertas[i].cultivos[j].posicion.columna] = juego.huertas[i].cultivos[j].tipo;
+      }
+    }
+  }
+
+  for (int i = 0; i < juego.tope_objetos; i++){
+    terreno_juego[juego.objetos[i].posicion.fila][juego.objetos[i].posicion.columna] = juego.objetos[i].tipo;
+  }
+  
+  terreno_juego[juego.deposito.fila][juego.deposito.columna] = DEPOSITO;
+
+  terreno_juego[juego.jugador.posicion.fila][juego.jugador.posicion.columna] = BLANCANIEVES;
+}
+/*
+  Pre: -
+  Post: Mustra en pantalla cada posicion del terreno_juego
+*/
+void imprimir_terreno_juego(char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRENO], int tope_fil_terreno, int tope_col_terreno){
+	for (int i = 0; i < tope_fil_terreno; i++) {
+	  for (int j = 0; j < tope_col_terreno; j++) {
+		  printf("[   %c\t]", terreno_juego[i][j]);
+	  }
+	  printf("\n");
+  }
+}
+/*
+  Pre
+  Post
+*/
+void informar_pesonaje_huerta(juego_t juego){
+  for (int i = 0; i < MAX_HUERTA; i++){
+    for (int j = 0; j < MAX_PLANTAS; j++){
+      if (posiciones_iguales(juego.jugador.posicion, juego.huertas[i].cultivos[j].posicion)){ 
+        if (!(juego.huertas[i].cultivos[j].ocupado)){
+          printf("Plantar: \n(%c) Tomate\n(%c) Zanahoria\n(%c) Brocoli\n(%c) Lechuga\n", TOMATE, ZANAHORIA, BROCOLI, LECHUGA );
+          if (juego.jugador.tiene_fertilizante){
+            printf("(%c) Fertilizante\n",FERTILIZANTE);
+          }
+        }else {
+          printf("El cultivo esta ocupado\n");
+          if (juego.jugador.tiene_fertilizante){
+            printf("(%c) Fertilizante\n",FERTILIZANTE);
+          }
+        }
+        if (juego.huertas[i].plagado){
+          printf("(%c) Insecticida\n",INSECTICIDA);
+        }
+      }
+
+    } 
+  }
+}
 
 //------------------------------------------------------------------------------
 void inicializar_juego(juego_t* juego, char enanito){
 
-  juego->jugador.cant_monedas = 0;
-  juego->movimientos = 0;
-  juego->tope_objetos = 0;
-  juego->jugador.tope_canasta = 0;
-  juego->huertas->tope_cultivos = 0;
+  inicializar_variables(juego);
+
   inicializa_monedas(juego, enanito);
-  juego->jugador.tiene_fertilizante = false;
-  juego->jugador.cant_insecticidas = INCECTICIDAS_INICIALES;
   
   bool posicion_ocupada[MAX_FIL_TERRENO][MAX_COL_TERRENO];
   for (int i = 0; i < MAX_FIL_TERRENO; i++){
@@ -460,7 +549,8 @@ void inicializar_juego(juego_t* juego, char enanito){
   }
   
   for (int i = 0; i < MAX_HUERTA; i++){
-    generar_huerta(juego, i, posicion_ocupada);
+    generar_centro_huerta(juego, i);
+    generar_bordes_huerta(juego, i, posicion_ocupada);
     juego->huertas[i].plagado = false;
   }
 
@@ -475,14 +565,12 @@ void inicializar_juego(juego_t* juego, char enanito){
   }
   posicion_ocupada[juego->deposito.fila][juego->deposito.columna] = true;
 
-
   generar_posicion(&(juego->jugador.posicion));
   while (posicion_ocupada[juego->jugador.posicion.fila][juego->jugador.posicion.columna]){
     generar_posicion(&(juego->jugador.posicion));
   }
   posicion_ocupada[juego->jugador.posicion.fila][juego->jugador.posicion.columna] = true;
 
-  
   for (int i = 0; i < TOPE_CANASTA; i++){
     juego->jugador.canasta[i] = CULTIVO_VACIO;
   }
@@ -590,78 +678,17 @@ void imprimir_terreno(juego_t juego){
   int tope_fil_terreno = 20;
   int tope_col_terreno = 20;
 
-  printf("Sus monedas son de : %i\n",juego.jugador.cant_monedas);
-  printf("Sus insecticidas son : %i\n",juego.jugador.cant_insecticidas);
-  printf("Sus movimientos son de : %i\n",juego.movimientos);
+  mostrar_inventario(juego);
 
-  if (!(juego.jugador.tiene_fertilizante)){
-    printf("No tiene fertilizante disponible\n");
-  }else{
-    printf("Tiene fertilizante disponible\n");
-  }
-  
   mostrar_canasta(juego);
 
   inicializar_terreno_juego(terreno_juego, tope_fil_terreno, tope_col_terreno);
-  //cargar_terreno_juego
-  for (int i = 0; i < MAX_HUERTA; i++){
-    for (int j = 0; j < MAX_PLANTAS; j++){
-      if(juego.huertas[i].cultivos[j].posicion.fila >= 0 && juego.huertas[i].cultivos[j].posicion.fila < MAX_FIL_TERRENO &&
-      juego.huertas[i].cultivos[j].posicion.columna >= 0 && juego.huertas[i].cultivos[j].posicion.columna < MAX_COL_TERRENO){
-        if (!(planta_crecida(juego, i, j))){
-          switch (juego.huertas[i].cultivos[j].tipo){
-            case TOMATE:
-              juego.huertas[i].cultivos[j].tipo = TOMATE_INMADURO;
-              break;
-            case ZANAHORIA:
-              juego.huertas[i].cultivos[j].tipo = ZANAHORIA_INMADURA;
-              break;
-            case BROCOLI:
-              juego.huertas[i].cultivos[j].tipo = BROCOLI_INMADURO;
-              break;
-            case LECHUGA:
-              juego.huertas[i].cultivos[j].tipo = LECHUGA_INMADURA;
-              break;
-
-          }
-        }
-        terreno_juego[juego.huertas[i].cultivos[j].posicion.fila][juego.huertas[i].cultivos[j].posicion.columna] = juego.huertas[i].cultivos[j].tipo;
-      }
-    }
-  }
-
-  for (int i = 0; i < juego.tope_objetos; i++){
-    terreno_juego[juego.objetos[i].posicion.fila][juego.objetos[i].posicion.columna] = juego.objetos[i].tipo;
-  }
   
-  terreno_juego[juego.deposito.fila][juego.deposito.columna] = DEPOSITO;
-
-  terreno_juego[juego.jugador.posicion.fila][juego.jugador.posicion.columna] = BLANCANIEVES;
+  cargar_terreno_juego(juego, terreno_juego);
 
   imprimir_terreno_juego(terreno_juego, tope_fil_terreno, tope_col_terreno);
-  //informar_pesonaje
-  for (int i = 0; i < MAX_HUERTA; i++){
-    for (int j = 0; j < MAX_PLANTAS; j++){
-      if (posiciones_iguales(juego.jugador.posicion, juego.huertas[i].cultivos[j].posicion)){ 
-        if (!(juego.huertas[i].cultivos[j].ocupado)){
-          printf("Plantar: \n(%c) Tomate\n(%c) Zanahoria\n(%c) Brocoli\n(%c) Lechuga\n", TOMATE, ZANAHORIA, BROCOLI, LECHUGA );
-          if (juego.jugador.tiene_fertilizante){
-            printf("(%c) Fertilizante\n",FERTILIZANTE);
-          }
-        }else {
-          printf("El cultivo esta ocupado\n");
-          if (juego.jugador.tiene_fertilizante){
-            printf("(%c) Fertilizante\n",FERTILIZANTE);
-          }
-        }
-        if (juego.huertas[i].plagado){
-          printf("(%c) Insecticida\n",INSECTICIDA);
-        }
-      }
-
-    } 
-  }
-
+  
+  informar_pesonaje_huerta(juego);
 }
 
 int estado_juego(juego_t juego){
