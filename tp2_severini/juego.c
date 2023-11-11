@@ -66,24 +66,24 @@ void verificar_estado(int estado, juego_t* juego){
 
 int main(){
   srand (( unsigned)time(NULL));
-  char inicial_enanito = FELIZ; //----------------------------------- cambiar esto ;
+  char inicial_enanito; 
   juego_t juego;
-  //char respuesta;
+  char respuesta;
 
-  //printf("Bienvenido. En este test te diremos a que enanito de la cenicienta te asemejas segun tu personalidad\n");
-  //printf("Contesta las siguientes preguntas para saber que enanito serias\n");
-  //calcular_enanito(&inicial_enanito);  
+  printf("Bienvenido. En este test te diremos a que enanito de la cenicienta te asemejas segun tu personalidad\n");
+  printf("Contesta las siguientes preguntas para saber que enanito serias\n");
+  calcular_enanito(&inicial_enanito);  
 
-  //mostrar_respuesta_final(inicial_enanito);
+  mostrar_respuesta_final(inicial_enanito);
   
-  //printf("Si desea continuar con el juego presione S de lo contrario presione cualquier letra\n");
-  //scanf(" %c",&respuesta);
-  //if (respuesta == 'S'){
+  printf("Si desea continuar con el juego presione S de lo contrario presione cualquier letra\n");
+  scanf(" %c",&respuesta);
+  if (respuesta == 'S'){
     inicializar_juego(&juego, inicial_enanito);
 
     int estado = estado_juego(juego);
     verificar_estado(estado,&juego);
-  //}
+  }
   printf("\n");
   return 0;
 }

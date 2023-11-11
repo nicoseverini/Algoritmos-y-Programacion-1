@@ -6,8 +6,8 @@
 #include "granja.h"
 //-----------------------------------------------inicializar-juego------------------------------------------------------------------------
 /*
-  pre
-  post
+  pre: -
+  post: Devuelve variables_inicializadas
 */
 void inicializar_variables(juego_t* juego){
   juego->jugador.cant_monedas = 0;
@@ -18,8 +18,8 @@ void inicializar_variables(juego_t* juego){
   juego->jugador.cant_insecticidas = INCECTICIDAS_INICIALES;
 }
 /*
-  Pre: -
-  Post: La cantidad de monedas_iniciales en el juego incremento segun el tipo de enanito
+  Pre: Enanito tiene q ser GRUÑOR o DORMILON o SABIO o FELIZ
+  Post: Aumenta la cantidad de monedas_iniciales segun el tipo de enanito
 */
 void inicializa_monedas(juego_t* juego, char enanito){
   switch (enanito){
@@ -35,22 +35,19 @@ void inicializa_monedas(juego_t* juego, char enanito){
     case FELIZ:
       juego->jugador.cant_monedas += MONEDAS_INICIALES_FELIZ;
       break;
-    default:
-      juego->jugador.cant_monedas = 0;
-      break;
   }
 }
 /*
   Pre: -
-  Post: Generar una posicion aleatoria entre los limites del terreno
+  Post: Genera una posicion aleatoria entre los limites del terreno
 */
 void generar_posicion(coordenada_t* posicion){
   posicion->columna = rand () % MAX_COL_TERRENO; 
   posicion->fila = rand () % MAX_FIL_TERRENO; 
 }
 /*
-  Pre
-  Post
+  Pre: Huerta_index tiene que ser un valor entre el 0 y menor que MAX_HUERTA
+  Post: Genera La posicion del centro de la huerta que estara dentro de los limites del terreo y se encuentra separado de otro centro 
 */
 void generar_centro_huerta(juego_t* juego, int huerta_index){
   bool posicion_valida = false;
@@ -71,8 +68,10 @@ void generar_centro_huerta(juego_t* juego, int huerta_index){
   }
 }
 /*
-  pre
-  post
+  pre: Huerta_index tiene que ser un valor entre el 0 y menor que MAX_HUERTA
+  post: 
+  - Genera bordes de la huerta, si se encuenrtan dentro del terreno y los marca como posicion_ocupada
+
 */
 void generar_bordes_huerta(juego_t* juego, int huerta_index, bool posicion_ocupada[MAX_COL_TERRENO][MAX_FIL_TERRENO]){
   int fila_centro = juego->huertas[huerta_index].cultivos[0].posicion.fila;
@@ -98,7 +97,7 @@ void generar_bordes_huerta(juego_t* juego, int huerta_index, bool posicion_ocupa
 }
 /*
   Pre:
-  - 0 <= i < TOPE_ESPINAS
+  - i tiene que ser un valor entre el 0 y menor que TOPE_ESPINAS
   Post: 
   - Genera posicion de TOPE_ESPINAS espinas aleatorias dentro del terreno y no se superponen con ninguna posicion_ocupada
   - Cada posicion fue asignada como posicion_ocupada = true
@@ -153,7 +152,9 @@ void mover_personaje(juego_t* juego, char accion, bool* accion_realizada){
 }
 /*
   Pre: 
-  - Los valores (TOMATE, ZANAHORIA, BROCOLI, LECHUGA) tienen que ser validos
+  - Los valores de accion (TOMATE, ZANAHORIA, BROCOLI, LECHUGA) tienen que ser validos
+  - i es un índice válido para la huerta. 
+  - j es un índice válido para los cultivos
   Post: 
   - Sembrar o no, un cultivo espesifico segun la accion enviada
   - Si se sembro se resta el costo del cultivo espesifico y esa posicion pasa a esta ocupada
@@ -188,10 +189,12 @@ void cultivar(juego_t* juego, char accion, int i, int j){
   }
 }
 /*
-  pre : -
+  pre : 
+  - i es un índice válido para la huerta. 
+  - j es un índice válido para los cultivos
   post : 
   - Devuelve true si la huerta con un cultivo espesifico esta preparada para cosechar
-  - Devuelve false si no esta en la huerta
+  - Devuelve false si no esta en la huerta y si no esta listo para cosechar
 */
 bool planta_crecida(juego_t juego, int i, int j){
   return ( ((juego.huertas[i].cultivos[j].tipo == TOMATE) && (juego.movimientos - juego.huertas[i].cultivos[j].movimiento_plantado) >= MOVIMIENTOS_TOMATE_CRECIDO)||
@@ -200,8 +203,12 @@ bool planta_crecida(juego_t juego, int i, int j){
   ((juego.huertas[i].cultivos[j].tipo == LECHUGA) && (juego.movimientos - juego.huertas[i].cultivos[j].movimiento_plantado) >= MOVIMIENTOS_LECHUGA_CRECIDO) );
 }
 /*
-  pre:
+  pre: 
+  -i es un índice válido para la huerta. 
+  -j es un índice válido para los cultivos
   post:
+  - Devuelve true si el cultivo especifico ya paso su tiempo de vida 
+  - Devuelve true si el cultivo especifico ya paso su tiempo de vida 
 */
 bool cultivo_esta_podrido(juego_t* juego, int i, int j){
   return ( ((juego->huertas[i].cultivos[j].tipo == TOMATE) && (juego->movimientos - juego->huertas[i].cultivos[j].movimiento_plantado) >= VIDA_TOMATE)||
@@ -210,8 +217,10 @@ bool cultivo_esta_podrido(juego_t* juego, int i, int j){
   ((juego->huertas[i].cultivos[j].tipo == LECHUGA) && (juego->movimientos - juego->huertas[i].cultivos[j].movimiento_plantado) >= VIDA_LECHUGA) );
 }
 /*
-  pre:
-  post:
+  pre: -
+  post: 
+  - Devuelve true si hay una plaga en el vector objetos 
+  - Devuelve false si no hay una plaga en el vector objetos
 */
 bool tengo_plaga(juego_t* juego){
   bool hay_plaga = false;
@@ -224,8 +233,8 @@ bool tengo_plaga(juego_t* juego){
   return hay_plaga;
 }
 /*
-  pre : -tiene que haber una plaga 
-  post : 
+  pre : Tiene q haber una plaga en el vector de objetos
+  post : Devuelve posicion de plaga en el vector objetos
 */
 int posicion_plaga(juego_t* juego){
   int posicion_plaga = 0;
@@ -237,8 +246,8 @@ int posicion_plaga(juego_t* juego){
   return posicion_plaga;
 }
 /*
-  pre:
-  post:
+  pre: Objeto_index tiene q estar dentro del vector objetos 
+  post: Elimina objeto_index del vector objetos
 */
 void eliminar_objeto(juego_t* juego, int objeto_index){
   for (int j = objeto_index; j < (juego->tope_objetos)-1; j++) {
@@ -249,7 +258,7 @@ void eliminar_objeto(juego_t* juego, int objeto_index){
 /*
   Pre: 
   - Los valores (TOMATE, ZANAHORIA, BROCOLI, LECHUGA) tienen que ser validos
-  - 0 <= huerta_index < MAX_HUERTAS
+  - Huerta_index tiene que ser un valor entre el 0 y menor que MAX_HUERTA
   - juego->jugador.tiene_fertilizante es true
   Post: 
   - Aplicar fertilizante a los cultivos de huerta_index
@@ -279,7 +288,7 @@ void aplicar_fertilizante(juego_t* juego, int huerta_index){
 }
 /*
   Pre:
-  - 0 <= huerta_index < MAX_HUERTAS
+  - Huerta_index tiene que ser un valor entre el 0 y menor que MAX_HUERTA
   - Juego->huertas[huerta_index].plagado tiene que ser true
   - Cantidad de insectidas tiene que ser mayor a 0
   Post: 
@@ -292,7 +301,7 @@ void aplicar_insecticida(juego_t* juego, int huerta_index){
 }
 /*
   Pre:
-  - 0 <= huerta_index < MAX_HUERTAS
+  - Huerta_index tiene que ser un valor entre el 0 y menor que MAX_HUERTA
   - Juego->huertas[huerta_index].plagado tiene que ser true
   Post: 
   - Elimina todos los cultivos de huerta_index y esas posiciones pasan a estar despocupadas
@@ -377,8 +386,10 @@ bool posicion_ocupada_plaga(coordenada_t posicion, juego_t* juego){
   return ocupado;
 }
 /*
-  Pre
-  Post
+  Pre: accion_realizada tiene q ser verdadero
+  Post: Cada diez movimientos contando desde el primero, 
+  si en el caso de haber plaga la elimina y genera una nueva plaga con posicion random y aumenta el tope objetos
+  si no hay plaga simplemente genera una nueva con posicion random y aumenta el tope objetos
 */
 void generar_plagas(juego_t* juego, bool hay_plaga, bool accion_realizada){
   if (juego->movimientos % 10 == 0 && accion_realizada){
@@ -394,8 +405,8 @@ void generar_plagas(juego_t* juego, bool hay_plaga, bool accion_realizada){
   }
 }
 /*
-  Pre
-  Post
+  Pre: accion_realizada tiene q ser verdadero
+  Post: Cada quince movimientos genera un fertilizante en una posicion random y aumenta el tope objetos
 */
 void generar_fertilizante(juego_t* juego, bool accion_realizada){
   if (juego->movimientos % 15 == 0 && accion_realizada){
@@ -408,8 +419,8 @@ void generar_fertilizante(juego_t* juego, bool accion_realizada){
   }
 }
 /*
- Pre
- Post
+ Pre: El jugador tiene q estar encima de un fetilizante y no tiene q tener fertilizante
+ Post: Elimina el fertlizante agarrado del vector objetos
 */
 void agarrar_fertilizante(juego_t* juego){
   for (int i = TOPE_ESPINAS; i < juego->tope_objetos; i++){
@@ -465,8 +476,15 @@ void cosechar(juego_t* juego, int i, int j){
   juego->jugador.tope_canasta++;
 }
 /*
-  Pre
-  Post
+  Pre: El valor de accion tiene q ser valido 
+  Post: 
+  - Si la plaga cumplio MOVIMIENTOS_PROPAGAR_PLAGA y se encuentra encima de una huerta q no esta plagada, se propaga la plaga
+  - Realiza acciones si en jugador se encuentra encima de la huerta
+    - Si el jugador está sobre una huerta y tiene monedas suficientes, cultiva una planta
+    - Si el jugador tiene fertilizante y la acción es FERTILIZANTE, aplica fertilizante en la huerta
+    - Si el jugador tiene insecticidas y la acción es INSECTICIDA, y la huerta está plagada, aplica insecticida
+  - Si la huerta no está plagada, la planta está crecida y no es de tipo vacío, cosecha la planta
+  - Si un cultivo está podrido, lo elimina cambiando su tipo a CULTIVO_VACIO y marcando como no ocupado
 */
 void realizar_acciones_huerta(juego_t* juego, bool hay_plaga, char accion){
   for (int i = 0; i < MAX_HUERTA; i++){ 
@@ -480,7 +498,7 @@ void realizar_acciones_huerta(juego_t* juego, bool hay_plaga, char accion){
       }
 
       if (posiciones_iguales(juego->jugador.posicion, juego->huertas[i].cultivos[j].posicion)){
-        if (!(juego->huertas[i].cultivos[j].ocupado) && juego->jugador.cant_monedas > VALOR_SEMILLA_TOMATE){
+        if (!(juego->huertas[i].cultivos[j].ocupado) && juego->jugador.cant_monedas > VALOR_SEMILLA_TOMATE && juego->huertas[i].cultivos[j].tipo == CULTIVO_VACIO){
           cultivar(juego, accion, i, j);
         }
         
@@ -492,12 +510,12 @@ void realizar_acciones_huerta(juego_t* juego, bool hay_plaga, char accion){
           aplicar_insecticida(juego, i);
         }
 
-        if (!(juego->huertas[i].plagado) && planta_crecida(*juego, i, j)){
+        if (!(juego->huertas[i].plagado) && planta_crecida(*juego, i, j) && juego->huertas[i].cultivos[j].tipo != CULTIVO_VACIO){
           cosechar(juego, i, j);  
         }
       }
 
-      if (cultivo_esta_podrido(juego, i, j)){
+      if (cultivo_esta_podrido(juego, i, j) && juego->huertas[i].cultivos[j].tipo != CULTIVO_VACIO){
         juego->huertas[i].cultivos[j].tipo = CULTIVO_VACIO;
         juego->huertas[i].cultivos[j].ocupado = false;
       }
@@ -505,8 +523,8 @@ void realizar_acciones_huerta(juego_t* juego, bool hay_plaga, char accion){
   }
 }
 /*
-  Pre
-  Post
+  Pre: -
+  Post: Mustra en pantalla informacion de personaje en el juego
 */
 void mostrar_inventario(juego_t juego){
   printf("Sus monedas son de : %i\n",juego.jugador.cant_monedas);
@@ -521,7 +539,7 @@ void mostrar_inventario(juego_t juego){
 }
 /*
   Pre: -
-  Post: Mostrar en pantalla los contenidos de juego.jugador.canasta
+  Post: Mostrar en pantalla los contenidos de la canasta
 */
 void mostrar_canasta(juego_t juego){
   printf("Canasta : [");
@@ -542,8 +560,8 @@ void inicializar_terreno_juego(char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRE
   }
 }
 /*
-  Pre
-  Post
+  Pre: -
+  Post: Carga la informacion del terren_juego
 */
 void cargar_terreno_juego(juego_t juego, char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRENO]){
   for (int i = 0; i < MAX_HUERTA; i++){
@@ -593,8 +611,8 @@ void imprimir_terreno_juego(char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRENO]
   }
 }
 /*
-  Pre
-  Post
+  Pre: -
+  Post: Mustra informacion de acciones convenientes q puede realizar el pesonaje en una huerta 
 */
 void informar_pesonaje_huerta(juego_t juego){
   for (int i = 0; i < MAX_HUERTA; i++){
