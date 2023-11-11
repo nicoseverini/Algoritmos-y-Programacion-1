@@ -14,7 +14,6 @@ void inicializar_variables(juego_t* juego){
   juego->movimientos = 0;
   juego->tope_objetos = 0;
   juego->jugador.tope_canasta = 0;
-  juego->huertas->tope_cultivos = 0;
   juego->jugador.tiene_fertilizante = false;
   juego->jugador.cant_insecticidas = INCECTICIDAS_INICIALES;
 }
@@ -76,7 +75,7 @@ void generar_centro_huerta(juego_t* juego, int huerta_index){
   post
 */
 void generar_bordes_huerta(juego_t* juego, int huerta_index, bool posicion_ocupada[MAX_COL_TERRENO][MAX_FIL_TERRENO]){
-    int fila_centro = juego->huertas[huerta_index].cultivos[0].posicion.fila;
+  int fila_centro = juego->huertas[huerta_index].cultivos[0].posicion.fila;
   int columna_centro = juego->huertas[huerta_index].cultivos[0].posicion.columna;
   for (int fila = -1; fila <= 1; fila++){
     for (int columna = -1; columna <= 1; columna++){
@@ -87,14 +86,15 @@ void generar_bordes_huerta(juego_t* juego, int huerta_index, bool posicion_ocupa
 
         posicion_ocupada[posicion_fila][posicion_columna] = true;
 
-        juego->huertas[huerta_index].cultivos[juego->huertas->tope_cultivos].posicion.fila = posicion_fila;
-        juego->huertas[huerta_index].cultivos[juego->huertas->tope_cultivos].posicion.columna = posicion_columna;
-        juego->huertas[huerta_index].cultivos[juego->huertas->tope_cultivos].tipo = CULTIVO_VACIO;
-        juego->huertas->tope_cultivos++;
+        juego->huertas[huerta_index].cultivos[juego->huertas[huerta_index].tope_cultivos].posicion.fila = posicion_fila;
+        juego->huertas[huerta_index].cultivos[juego->huertas[huerta_index].tope_cultivos].posicion.columna = posicion_columna;
+        juego->huertas[huerta_index].cultivos[juego->huertas[huerta_index].tope_cultivos].tipo = CULTIVO_VACIO;
+        juego->huertas[huerta_index].tope_cultivos++;
       }
+      
     }
   }
-  juego->huertas->tope_cultivos = 0;
+  
 }
 /*
   Pre:
@@ -329,7 +329,7 @@ bool posicion_ocupada_fertilizante(coordenada_t posicion, juego_t* juego){
   bool ocupado = false;
 
   for (int i = 0; i < MAX_HUERTA; i++){
-    for (int j = 0; j < MAX_PLANTAS; j++){
+    for (int j = 0; j < juego->huertas[i].tope_cultivos; j++){
       if(posiciones_iguales(posicion, juego->huertas[i].cultivos[j].posicion)){
         ocupado = true;
       }
@@ -377,11 +377,56 @@ bool posicion_ocupada_plaga(coordenada_t posicion, juego_t* juego){
   return ocupado;
 }
 /*
+  Pre
+  Post
+*/
+void generar_plagas(juego_t* juego, bool hay_plaga, bool accion_realizada){
+  if (juego->movimientos % 10 == 0 && accion_realizada){
+    if (hay_plaga){
+      eliminar_objeto(juego, posicion_plaga(juego));
+    }
+    juego->objetos[juego->tope_objetos].tipo = PLAGAS;
+    generar_posicion(&(juego->objetos[juego->tope_objetos].posicion));
+    while (posicion_ocupada_plaga(juego->objetos[juego->tope_objetos].posicion, juego)){
+      generar_posicion(&(juego->objetos[juego->tope_objetos].posicion));
+    }
+    juego->tope_objetos++;
+  }
+}
+/*
+  Pre
+  Post
+*/
+void generar_fertilizante(juego_t* juego, bool accion_realizada){
+  if (juego->movimientos % 15 == 0 && accion_realizada){
+    juego->objetos[juego->tope_objetos].tipo = FERTILIZANTE;
+    generar_posicion(&(juego->objetos[juego->tope_objetos].posicion));
+    while (posicion_ocupada_fertilizante(juego->objetos[juego->tope_objetos].posicion, juego)){
+      generar_posicion(&(juego->objetos[juego->tope_objetos].posicion));
+    }
+    juego->tope_objetos++;
+  }
+}
+/*
+ Pre
+ Post
+*/
+void agarrar_fertilizante(juego_t* juego){
+  for (int i = TOPE_ESPINAS; i < juego->tope_objetos; i++){
+    if (posiciones_iguales(juego->jugador.posicion, juego->objetos[i].posicion) && !(juego->jugador.tiene_fertilizante) && juego->objetos[i].tipo == FERTILIZANTE){
+      eliminar_objeto(juego, i);
+      juego->jugador.tiene_fertilizante = true;
+    }
+  }
+}
+/*
   Pre: Estar a distancia manhattan del deposito
   Post: Devuelve un cantidad de monedas segun el valor de una verdura espesifica 
 */
 void vender(juego_t* juego){
-      for (int i = 0; i < juego->jugador.tope_canasta; i++) {
+  int distancia_manhattan = abs(juego->jugador.posicion.fila - juego->deposito.fila) + abs(juego->jugador.posicion.columna - juego->deposito.columna);
+  if (distancia_manhattan <= 2) {
+    for (int i = 0; i < juego->jugador.tope_canasta; i++) {
       char verdura = juego->jugador.canasta[i];
       if (verdura != CULTIVO_VACIO) {
         switch (verdura) {
@@ -403,6 +448,7 @@ void vender(juego_t* juego){
       }
     }
     juego->jugador.tope_canasta = 0;
+  }
 }
 /*
   Pre: Planta tiene q estar crecida y la huerta no tiene q estar plagada 
@@ -410,13 +456,53 @@ void vender(juego_t* juego){
   - Valor en la canasta del cultivo cosechado
   - En la posicion del cultivo cosechado pasa a estar sin cultivo y desocupada
 */
-void cosechar(juego_t* juego,int i,int j){
+void cosechar(juego_t* juego, int i, int j){
   if(juego->jugador.tope_canasta < TOPE_CANASTA){
     juego->jugador.canasta[juego->jugador.tope_canasta] = juego->huertas[i].cultivos[j].tipo; 
     juego->huertas[i].cultivos[j].tipo = CULTIVO_VACIO; 
     juego->huertas[i].cultivos[j].ocupado = false;
   }
   juego->jugador.tope_canasta++;
+}
+/*
+  Pre
+  Post
+*/
+void realizar_acciones_huerta(juego_t* juego, bool hay_plaga, char accion){
+  for (int i = 0; i < MAX_HUERTA; i++){ 
+    for (int j = 0; j < juego->huertas[i].tope_cultivos; j++){
+      if (hay_plaga && posiciones_iguales(juego->objetos[posicion_plaga(juego)].posicion, juego->huertas[i].cultivos[j].posicion) && !(juego->huertas[i].plagado)){
+        juego->huertas[i].plagado = true;
+        juego->huertas[i].movimientos_plagado = (juego->movimientos);
+      }
+      if (((juego->movimientos - juego->huertas[i].movimientos_plagado) == MOVIMIENTOS_PROPAGAR_PLAGA) && juego->huertas[i].plagado){
+        propagar_plaga(juego, i);
+      }
+
+      if (posiciones_iguales(juego->jugador.posicion, juego->huertas[i].cultivos[j].posicion)){
+        if (!(juego->huertas[i].cultivos[j].ocupado) && juego->jugador.cant_monedas > VALOR_SEMILLA_TOMATE){
+          cultivar(juego, accion, i, j);
+        }
+        
+        if (juego->jugador.tiene_fertilizante && accion == FERTILIZANTE){
+          aplicar_fertilizante(juego, i);
+        }
+
+        if (juego->jugador.cant_insecticidas > 0 && accion == INSECTICIDA && juego->huertas[i].plagado){
+          aplicar_insecticida(juego, i);
+        }
+
+        if (!(juego->huertas[i].plagado) && planta_crecida(*juego, i, j)){
+          cosechar(juego, i, j);  
+        }
+      }
+
+      if (cultivo_esta_podrido(juego, i, j)){
+        juego->huertas[i].cultivos[j].tipo = CULTIVO_VACIO;
+        juego->huertas[i].cultivos[j].ocupado = false;
+      }
+    }
+  }
 }
 /*
   Pre
@@ -461,7 +547,7 @@ void inicializar_terreno_juego(char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRE
 */
 void cargar_terreno_juego(juego_t juego, char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRENO]){
   for (int i = 0; i < MAX_HUERTA; i++){
-    for (int j = 0; j < MAX_PLANTAS; j++){
+    for (int j = 0; j < juego.huertas[i].tope_cultivos; j++){
       if(juego.huertas[i].cultivos[j].posicion.fila >= 0 && juego.huertas[i].cultivos[j].posicion.fila < MAX_FIL_TERRENO &&
       juego.huertas[i].cultivos[j].posicion.columna >= 0 && juego.huertas[i].cultivos[j].posicion.columna < MAX_COL_TERRENO){
         if (!(planta_crecida(juego, i, j))){
@@ -512,7 +598,7 @@ void imprimir_terreno_juego(char terreno_juego[MAX_FIL_TERRENO][MAX_COL_TERRENO]
 */
 void informar_pesonaje_huerta(juego_t juego){
   for (int i = 0; i < MAX_HUERTA; i++){
-    for (int j = 0; j < MAX_PLANTAS; j++){
+    for (int j = 0; j < juego.huertas[i].tope_cultivos; j++){
       if (posiciones_iguales(juego.jugador.posicion, juego.huertas[i].cultivos[j].posicion)){ 
         if (!(juego.huertas[i].cultivos[j].ocupado)){
           printf("Plantar: \n(%c) Tomate\n(%c) Zanahoria\n(%c) Brocoli\n(%c) Lechuga\n", TOMATE, ZANAHORIA, BROCOLI, LECHUGA );
@@ -549,6 +635,7 @@ void inicializar_juego(juego_t* juego, char enanito){
   }
   
   for (int i = 0; i < MAX_HUERTA; i++){
+    juego->huertas[i].tope_cultivos = 0;
     generar_centro_huerta(juego, i);
     generar_bordes_huerta(juego, i, posicion_ocupada);
     juego->huertas[i].plagado = false;
@@ -580,7 +667,6 @@ void inicializar_juego(juego_t* juego, char enanito){
 void realizar_jugada(juego_t* juego, char accion){
 
   bool accion_realizada = false;
-  bool hay_plaga = tengo_plaga(juego);
   mover_personaje(juego, accion, &accion_realizada);
 
   for (int i = 0; i < TOPE_ESPINAS; i++){
@@ -589,81 +675,16 @@ void realizar_jugada(juego_t* juego, char accion){
     }
   }
 
+  generar_plagas(juego, tengo_plaga(juego), accion_realizada);
 
-  //generar plagas
-  if (juego->movimientos % 10 == 0 && accion_realizada){
-    if (hay_plaga){
-      eliminar_objeto(juego, posicion_plaga(juego));
-    }
-    juego->objetos[juego->tope_objetos].tipo = PLAGAS;
-    generar_posicion(&(juego->objetos[juego->tope_objetos].posicion));
-    while (posicion_ocupada_plaga(juego->objetos[juego->tope_objetos].posicion, juego)){
-      generar_posicion(&(juego->objetos[juego->tope_objetos].posicion));
-    }
-    juego->tope_objetos++;
-    hay_plaga = true;
-  }
+  generar_fertilizante(juego, accion_realizada);
 
-  //generar fertilizantes
-  if (juego->movimientos % 15 == 0 && accion_realizada){
-    juego->objetos[juego->tope_objetos].tipo = FERTILIZANTE;
-    generar_posicion(&(juego->objetos[juego->tope_objetos].posicion));
-    while (posicion_ocupada_fertilizante(juego->objetos[juego->tope_objetos].posicion, juego)){
-      generar_posicion(&(juego->objetos[juego->tope_objetos].posicion));
-    }
-    juego->tope_objetos++;
-  }
-  //agarrar fertilizante
-  for (int i = TOPE_ESPINAS; i < juego->tope_objetos; i++){
-    if (posiciones_iguales(juego->jugador.posicion, juego->objetos[i].posicion) && !(juego->jugador.tiene_fertilizante) && juego->objetos[i].tipo == FERTILIZANTE){
-      eliminar_objeto(juego, i);
-      juego->jugador.tiene_fertilizante = true;
-    }
-  }
-  //acciones huerta
-  for (int i = 0; i < MAX_HUERTA; i++){ 
-    for (int j = 0; j < MAX_PLANTAS; j++){
-      //plaga ensima de huerta
-      if (hay_plaga && posiciones_iguales(juego->objetos[posicion_plaga(juego)].posicion, juego->huertas[i].cultivos[j].posicion) && !(juego->huertas[i].plagado)){
-        juego->huertas[i].plagado = true;
-        juego->huertas[i].movimientos_plagado = (juego->movimientos);
-      }
-      if (((juego->movimientos - juego->huertas[i].movimientos_plagado) == MOVIMIENTOS_PROPAGAR_PLAGA) && juego->huertas[i].plagado){
-        propagar_plaga(juego, i);
-      }
+  agarrar_fertilizante(juego);
 
-      //acciones personaje ensima de huertta
-      if (posiciones_iguales(juego->jugador.posicion, juego->huertas[i].cultivos[j].posicion)){
-        if (!(juego->huertas[i].cultivos[j].ocupado) && juego->jugador.cant_monedas > VALOR_SEMILLA_TOMATE){
-          cultivar(juego, accion, i, j);
-        }
-        
-        if (juego->jugador.tiene_fertilizante && accion == FERTILIZANTE){
-          aplicar_fertilizante(juego, i);
-        }
+  realizar_acciones_huerta(juego, tengo_plaga(juego), accion);
 
-        if (juego->jugador.cant_insecticidas > 0 && accion == INSECTICIDA && juego->huertas[i].plagado){
-          aplicar_insecticida(juego, i);
-        }
-
-        if (!(juego->huertas[i].plagado) && planta_crecida(*juego, i, j)){
-          cosechar(juego, i, j);  
-        }
-      }
-
-      if (cultivo_esta_podrido(juego, i, j)){
-        juego->huertas[i].cultivos[j].tipo = CULTIVO_VACIO;
-        juego->huertas[i].cultivos[j].ocupado = false;
-      }
-
-    }
-  }
-  //distancia deposito venta
-  int distancia_manhattan = abs(juego->jugador.posicion.fila - juego->deposito.fila) + abs(juego->jugador.posicion.columna - juego->deposito.columna);
-  if (distancia_manhattan <= 2) {
-    vender(juego);
-  }
-
+  vender(juego);
+  
   if (juego->jugador.cant_insecticidas > 0 && accion == INSECTICIDA){
     juego->jugador.cant_insecticidas--;
   }
