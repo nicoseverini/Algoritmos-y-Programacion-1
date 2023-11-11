@@ -88,6 +88,7 @@ void generar_bordes_huerta(juego_t* juego, int huerta_index, bool posicion_ocupa
         juego->huertas[huerta_index].cultivos[juego->huertas[huerta_index].tope_cultivos].posicion.fila = posicion_fila;
         juego->huertas[huerta_index].cultivos[juego->huertas[huerta_index].tope_cultivos].posicion.columna = posicion_columna;
         juego->huertas[huerta_index].cultivos[juego->huertas[huerta_index].tope_cultivos].tipo = CULTIVO_VACIO;
+        juego->huertas[huerta_index].cultivos[juego->huertas[huerta_index].tope_cultivos].ocupado = false;
         juego->huertas[huerta_index].tope_cultivos++;
       }
       
@@ -510,7 +511,7 @@ void realizar_acciones_huerta(juego_t* juego, bool hay_plaga, char accion){
           aplicar_insecticida(juego, i);
         }
 
-        if (!(juego->huertas[i].plagado) && planta_crecida(*juego, i, j) && juego->huertas[i].cultivos[j].tipo != CULTIVO_VACIO){
+        if (!(juego->huertas[i].plagado) && planta_crecida(*juego, i, j) && juego->huertas[i].cultivos[j].tipo != CULTIVO_VACIO && !(cultivo_esta_podrido(juego, i, j))){
           cosechar(juego, i, j);  
         }
       }
