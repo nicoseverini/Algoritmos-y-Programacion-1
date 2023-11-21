@@ -1,0 +1,69 @@
+##
+open(CLIENTES)  si no se pone modo se asigna autoaticamente "r"
+
+##
+usar import csv 
+
+
+reader = csv.reader(archivo, delimiter =";")
+  for linea in reader:
+    #esto te carga en cada fila un vector con los valores separados por ";" ej: ['500', 'salida', 'cargar sube']
+    #en vez de usar el punto split usar esto
+  
+
+  escritor = csv.writer(archivo , delimiter = ";")
+    #delimita automaticamente las palabras por ;
+
+    ej: escritor.writerow([500, "salida", "helado "]) = 500;salida;helado
+
+
+
+##
+forma  
+f"te qudan { creditos } creditos"
+
+forma vija
+"te quedan {} creditos y ${} de saldo".format(creditos, saldo)
+
+
+
+
+##
+solo usar en este caso particula(solo cuando se abre un asrchivo )
+try:
+  archivo= open("modertno.csv", "a")
+exept: 
+  print("no se pudo abrir el archivo")
+  return
+
+---
+----
+---
+archivo.close()
+
+
+
+##
+coiar un archivo en el otro 
+cp aux.csv main.csv 
+
+
+##
+import os
+
+primero cerrar archivos asi termina "todos los procesos"
+archivo.close()
+
+renombra a aux por el archivo main y main se deletea 
+os.rename("aux.csv" , "main.csv")
+
+
+##
+costantes 
+
+numero de el vector ej: pedido[cantidad]
+
+delimiter en nuestro caso ";"
+
+nombres de archivos
+
