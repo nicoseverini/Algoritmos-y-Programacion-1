@@ -1,9 +1,12 @@
 import sys
 import csv
+import os
 
 PEDIDOS = "pedidos.csv"
+PEDIDOS_AUX = "pedidos_aux.csv"
 CLIENTES = "clientes.csv"
 MODO_ADJUNTAR = "a"
+MODO_ESCRIBIR ="w"
 DELIMITADOR = ";"
 ACCION_PEDIDO  = 1
 CANT_PEDIDO = 2
@@ -33,8 +36,8 @@ def buscar_id(nombre_ingresado):
 def pedido_repetido(id, pedido):
   repetido = False
   with open(PEDIDOS) as archivo:
-    lista_pedidos = csv.reader(archivo, delimiter = DELIMITADOR)
-    for linea in lista_pedidos:
+    lector_lista_pedidos = csv.reader(archivo, delimiter = DELIMITADOR)
+    for linea in lector_lista_pedidos:
       if linea[0] == id and linea[1] == pedido:
         repetido = True
   return repetido
@@ -61,9 +64,46 @@ def agregar(pedido):
         lista_clientes.write(f"{id}{DELIMITADOR}{pedido[4]}\n")
       print("Se agrego un producto a la lista")
 
-def modificar():
-  return 0
+def modificar(pedido):
+  try:
+    archivo_pedidos = open(PEDIDOS)
+  except:
+    print("No se pudo abrir el archivo de pedidos")
+    return
 
+  try:
+    archivo_pedidos_aux = open(PEDIDOS_AUX, MODO_ESCRIBIR)
+  except:
+    archivo_pedidos.close()
+    print("No se pudo crear un archivo de pedidos auxiliar")
+    return
+
+  lector_lista_pedidos = csv.reader(archivo_pedidos, delimiter = DELIMITADOR)
+  escritor_lista_pedidos_aux = csv.writer(archivo_pedidos_aux, delimiter = DELIMITADOR)
+
+  for fila in lector_lista_pedidos:
+    if fila[0] == pedido[2]:
+      if fila[1] == pedido[4] and frutas_venta(pedido[4]):
+        if pedido[3] == 0:
+          fila = ""
+        elif pedido[3] != 0:
+          fila[2] = fila[2].replace(fila[2], pedido[3])
+        print("La modificacion fue exitosa")
+      else:
+        print("Verdura ingresada incorrecta. La lista de verduras a la venta es:")
+        print("("+TOMATE+") Tomate\n("+BROCOLI+") Brocoli\n("+ZANAHORIA+") Zanahoria\n("+LECHUGA+") Lechuga")
+
+    else:
+      print("La id a la cual estas que estas queriendo hacerder no existe")
+    escritor_lista_pedidos_aux.writerow(fila)
+
+  archivo_pedidos.close()
+  archivo_pedidos_aux.close()
+
+  os.rename(PEDIDOS_AUX, PEDIDOS)
+
+def eliminar(pedido):
+  return 0
 
 def acciones_lista_pedidos(pedido):
   if pedido[ACCION_PEDIDO] == "agregar":
@@ -78,6 +118,8 @@ def acciones_lista_pedidos(pedido):
     else:
       print("Parametros para modificar incorrectos. Los correctos son:")
       print("python3 main.py modificar (id del pedido) (cantidad del pedido) (verdura)")
+  elif pedido[ACCION_PEDIDO] == "eliminar":
+    eliminar(pedido)
   else:
     print("Accion enviada incorrecta. Las correctas son:")
     print("agregar\nmodificar\neliminar\nlistar\n")
