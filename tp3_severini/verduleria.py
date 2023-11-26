@@ -9,18 +9,30 @@ CLIENTES_AUX = "clientes_aux.csv"
 MODO_ADJUNTAR = "a"
 MODO_ESCRIBIR ="w"
 DELIMITADOR = ";"
-ACCION_PEDIDO  = 0
-CANT_VERDURA_PEDIDO = 1
-VERDURA_PEDIDO = 2
-NOMBRE_PEDIDO = 3
 TOMATE = 'T'
 BROCOLI = 'B'
 ZANAHORIA = 'Z'
 LECHUGA = 'L'
+PALABRA_PARA_AGREGAR = "agregar"
+PALABRA_PARA_MODIFICAR = "modificar"
+PALABRA_PARA_ELIMINAR = "eliminar"
+PALABRA_PARA_LISTAR = "listar"
 
-NUMERO_PEDIDO = 1
+PEDIDOS_ID_CLIENTE = 0
+PEDIDOS_VERDURA = 1
+PEDIDOS_CANT_VERDURA = 2
+
+CLIENTES_ID_CLIENTE = 0
+CLIENTES_NOMBRE_CLIENTE = 1
+
+ACCION_INGRESADA  = 0
+CANT_VERDURA_INGRESADA = 1
+VERDURA_INGERSADA = 2
+NOMBRE_CLIENTE_INGRESADO = 3
+
+ID_CLIENTE = 1
 CANT_VERDURA_MODIFICAR = 2
-VERDURA_MODIFICAR = 3
+VERDURA_A_MODIFICAR = 3
 
 def inicializar_archivos():
   try:
@@ -32,23 +44,23 @@ def inicializar_archivos():
   except:
     print("Error al inicializar los archivos")
 
-def buscar_nombre(nombre_ingresado):
+def buscar_id_por_nombre(nombre_ingresado):
   id = 1
   se_encontro_nombre = False
   try:
     archivo_clientes = open(CLIENTES)
   except:
-    print("el archivos de clientes no se abrio correctamente")
+    print("El archivos de clientes no se abrio correctamente")
     return
 
-  lista_clientes = csv.reader(archivo_clientes, delimiter = DELIMITADOR)
-  for linea in lista_clientes:
-    if linea[1] == nombre_ingresado:
-      id = linea[0]
+  lector_lista_clientes = csv.reader(archivo_clientes, delimiter = DELIMITADOR)
+  for linea in lector_lista_clientes:
+    if linea[CLIENTES_NOMBRE_CLIENTE] == nombre_ingresado:
+      id = linea[CLIENTES_ID_CLIENTE]
       se_encontro_nombre = True
     if not se_encontro_nombre:
-      if int(linea[0]) >= id:
-        id = (int(linea[0])+1)
+      if int(linea[CLIENTES_ID_CLIENTE]) >= id:
+        id = (int(linea[CLIENTES_ID_CLIENTE])+1)
 
   archivo_clientes.close()
 
@@ -62,15 +74,15 @@ def buscar_id(id):
     print("el archivos de clientes no se abrio correctamente")
     return
 
-  lista_clientes = csv.reader(archivo_clientes, delimiter = DELIMITADOR)
-  for linea in lista_clientes:
-    if linea[0] == id:
+  lector_lista_clientes = csv.reader(archivo_clientes, delimiter = DELIMITADOR)
+  for linea in lector_lista_clientes:
+    if linea[CLIENTES_ID_CLIENTE] == id:
       se_encontro_id = True
   archivo_clientes.close()
  
   return se_encontro_id
 
-def pedido_repetido(id, pedido):
+def es_pedido_repetido(id, verdura_ingresada):
   repetido = False
   try:
     archivo_pedidos = open(PEDIDOS)
@@ -80,13 +92,13 @@ def pedido_repetido(id, pedido):
 
   lector_lista_pedidos = csv.reader(archivo_pedidos, delimiter = DELIMITADOR)
   for linea in lector_lista_pedidos:
-    if linea[0] == id and linea[1] == pedido:
+    if linea[PEDIDOS_ID_CLIENTE] == id and linea[PEDIDOS_VERDURA] == verdura_ingresada:
       repetido = True
 
   archivo_pedidos.close()
   return repetido
         
-def verduras_venta(verdura_ingresada):
+def es_verdura_disponible(verdura_ingresada):
   return(verdura_ingresada == TOMATE or verdura_ingresada == BROCOLI or
           verdura_ingresada == ZANAHORIA or verdura_ingresada == LECHUGA)
 
@@ -111,49 +123,49 @@ def agregar_lista_pedidos(id, pedido):
   escritor_lista_pedidos_aux = csv.writer(archivo_pedidos_aux, delimiter = DELIMITADOR)
   se_agrego = False
   for fila in lector_lista_pedidos:
-    if fila[0] == id and not se_agrego:
+    if fila[PEDIDOS_ID_CLIENTE] == id and not se_agrego:
       se_agrego = True
-      agregar_verdura_lista(archivo_pedidos_aux, id, pedido[VERDURA_PEDIDO], pedido[CANT_VERDURA_PEDIDO])
+      agregar_verdura_lista(archivo_pedidos_aux, id, pedido[VERDURA_INGERSADA], pedido[CANT_VERDURA_INGRESADA])
 
     escritor_lista_pedidos_aux.writerow(fila)
 
   if not se_agrego:
-    agregar_verdura_lista(archivo_pedidos_aux, id, pedido[VERDURA_PEDIDO], pedido[CANT_VERDURA_PEDIDO])
+    agregar_verdura_lista(archivo_pedidos_aux, id, pedido[VERDURA_INGERSADA], pedido[CANT_VERDURA_INGRESADA])
 
   archivo_pedidos.close()
   archivo_pedidos_aux.close()
 
   os.rename(PEDIDOS_AUX, PEDIDOS) 
 
-def agregar_lista_clientes(id, pedido):
+def agregar_lista_clientes(id, nombre_cliente):
   try:
-    lista_clientes = open(CLIENTES, MODO_ADJUNTAR)
+    archivo_clientes = open(CLIENTES, MODO_ADJUNTAR)
   except:
     print("No se pudo abrir el archivo de clientes")
     return
 
-  lista_clientes.write(f"{id}{DELIMITADOR}{pedido[NOMBRE_PEDIDO]}\n")
+  archivo_clientes.write(f"{id}{DELIMITADOR}{nombre_cliente}\n")
 
-  lista_clientes.close()
+  archivo_clientes.close()
 
 def agregar(pedido):
-  id, se_encontro_nombre = buscar_nombre(pedido[NOMBRE_PEDIDO])
+  id, se_encontro_nombre = buscar_id_por_nombre(pedido[NOMBRE_CLIENTE_INGRESADO])
 
-  if not verduras_venta(pedido[VERDURA_PEDIDO]):
+  if not es_verdura_disponible(pedido[VERDURA_INGERSADA]):
     print("No vendemos su verdura ingresada. La lista de verduras a la venta es:")
     print("("+TOMATE+") Tomate\n("+BROCOLI+") Brocoli\n("+ZANAHORIA+") Zanahoria\n("+LECHUGA+") Lechuga")
 
-  elif int(pedido[CANT_VERDURA_PEDIDO]) <= 0:
+  elif int(pedido[CANT_VERDURA_INGRESADA]) <= 0:
     print("la cantidad de verduras es incorrecta")
 
-  elif pedido_repetido(id, pedido[VERDURA_PEDIDO]):
+  elif es_pedido_repetido(id, pedido[VERDURA_INGERSADA]):
     print("La verdura que estas intentando agregar, ya fue agregada")
     print("Intena nuevamente con: modificar (id del pedido) (cantidad del pedido) (verdura)")
 
   else:
     agregar_lista_pedidos(id, pedido)
     if not se_encontro_nombre:
-      agregar_lista_clientes(id, pedido)
+      agregar_lista_clientes(id, pedido[NOMBRE_CLIENTE_INGRESADO])
 
     print("Se agrego un producto a la lista")
 
@@ -165,25 +177,25 @@ def modificar_verdura_lista(archivo_pedidos, archivo_pedidos_aux, pedido):
   se_encontro_id = False
 
   for fila in lector_lista_pedidos:
-    if fila[0] == pedido[NUMERO_PEDIDO]:
+    if fila[PEDIDOS_ID_CLIENTE] == pedido[ID_CLIENTE]:
       se_encontro_id = True
-      if fila[1] == pedido[VERDURA_MODIFICAR]:
-        fila[2] = fila[2].replace(fila[2], pedido[CANT_VERDURA_MODIFICAR])
+      if fila[PEDIDOS_VERDURA] == pedido[VERDURA_A_MODIFICAR]:
+        fila[PEDIDOS_CANT_VERDURA] = fila[PEDIDOS_CANT_VERDURA].replace(fila[PEDIDOS_CANT_VERDURA], pedido[CANT_VERDURA_MODIFICAR])
         se_modifico = True
         print("La modificacion fue exitosa")
-    if not se_modifico and not se_agrego and se_encontro_id and fila[0] != pedido[NUMERO_PEDIDO]:
+    if not se_modifico and not se_agrego and se_encontro_id and fila[PEDIDOS_ID_CLIENTE] != pedido[ID_CLIENTE]:
       se_agrego = True
-      agregar_verdura_lista(archivo_pedidos_aux, pedido[NUMERO_PEDIDO], pedido[VERDURA_MODIFICAR], pedido[CANT_VERDURA_MODIFICAR])
+      agregar_verdura_lista(archivo_pedidos_aux, pedido[ID_CLIENTE], pedido[VERDURA_A_MODIFICAR], pedido[CANT_VERDURA_MODIFICAR])
       print("Se agrego la modificacion correctamente")   
         
     escritor_lista_pedidos_aux.writerow(fila)
   
   if not se_modifico and not se_agrego:
-    agregar_verdura_lista(archivo_pedidos_aux, pedido[NUMERO_PEDIDO], pedido[VERDURA_MODIFICAR], pedido[CANT_VERDURA_MODIFICAR])
+    agregar_verdura_lista(archivo_pedidos_aux, pedido[ID_CLIENTE], pedido[VERDURA_A_MODIFICAR], pedido[CANT_VERDURA_MODIFICAR])
 
 def modificar(pedido):
-  if buscar_id(pedido[NUMERO_PEDIDO]):
-    if verduras_venta(pedido[VERDURA_MODIFICAR]):
+  if buscar_id(pedido[ID_CLIENTE]):
+    if es_verdura_disponible(pedido[VERDURA_A_MODIFICAR]):
       if int(pedido[CANT_VERDURA_MODIFICAR]) > 0:
         try:
           archivo_pedidos = open(PEDIDOS)
@@ -213,7 +225,7 @@ def modificar(pedido):
   else:
     print("El id no fue encontrado")
 
-def eliminar_pedidos(pedido):
+def eliminar_pedidos(id_pedido):
   try:
     archivo_pedidos = open(PEDIDOS)
   except:
@@ -231,17 +243,15 @@ def eliminar_pedidos(pedido):
   escritor_lista_pedidos_aux = csv.writer(archivo_pedidos_aux, delimiter = DELIMITADOR)
 
   for fila in lector_lista_pedidos:
-    if fila[0] != pedido[NUMERO_PEDIDO]:
+    if fila[PEDIDOS_ID_CLIENTE] != id_pedido:
       escritor_lista_pedidos_aux.writerow(fila)
-
-
 
   archivo_pedidos.close()
   archivo_pedidos_aux.close()
 
   os.rename(PEDIDOS_AUX, PEDIDOS)
    
-def eliminar_cliente(pedido):
+def eliminar_cliente(id_cliente):
   try:
     archivo_clientes = open(CLIENTES)
   except:
@@ -259,7 +269,7 @@ def eliminar_cliente(pedido):
   escritor_lista_clientes_aux = csv.writer(archivo_clientes_aux, delimiter = DELIMITADOR)
 
   for fila in lector_lista_clientes:
-    if fila[0] != pedido[NUMERO_PEDIDO]:
+    if fila[CLIENTES_ID_CLIENTE] != id_cliente:
       escritor_lista_clientes_aux.writerow(fila)
 
   archivo_clientes.close()
@@ -268,24 +278,24 @@ def eliminar_cliente(pedido):
   os.rename(CLIENTES_AUX, CLIENTES)
 
 def eliminar(pedido):
-  if buscar_id(pedido[NUMERO_PEDIDO]):
-    eliminar_pedidos(pedido)
-    eliminar_cliente(pedido)
+  if buscar_id(pedido[ID_CLIENTE]):
+    eliminar_pedidos(pedido[ID_CLIENTE])
+    eliminar_cliente(pedido[ID_CLIENTE])
     print("Se eliminaron los elementos correctamente")
   else:
     print("La id ingresada en incorrecta")
 
-def buscar_nombre_id(id):
+def buscar_nombre_por_id(id):
   try:
     archivo_clientes = open(CLIENTES)
   except:
     print("el archivos de clientes no se abrio correctamente")
     return
 
-  lista_clientes = csv.reader(archivo_clientes, delimiter = DELIMITADOR)
-  for linea in lista_clientes:
-    if linea[0] == id:
-      return linea[1]
+  lector_lista_clientes = csv.reader(archivo_clientes, delimiter = DELIMITADOR)
+  for linea in lector_lista_clientes:
+    if linea[CLIENTES_ID_CLIENTE] == id:
+      return linea[CLIENTES_NOMBRE_CLIENTE]
 
 def nombre_verdura(inicial_verdura):
   if inicial_verdura == TOMATE:
@@ -296,7 +306,6 @@ def nombre_verdura(inicial_verdura):
     return "Zanahoria" 
   if inicial_verdura == LECHUGA:
     return "Lechuga" 
-
 
 def listar(pedido):
   try:
@@ -311,55 +320,55 @@ def listar(pedido):
     print("El archivo de pedidos no se abrio correctamente")
     return
 
-  lista_clientes = csv.reader(archivo_clientes, delimiter = DELIMITADOR)
-  lista_pedidos = csv.reader(archivo_pedidos, delimiter = DELIMITADOR)
+  lector_lista_clientes = csv.reader(archivo_clientes, delimiter = DELIMITADOR)
+  lector_lista_pedidos = csv.reader(archivo_pedidos, delimiter = DELIMITADOR)
 
   if len(pedido) == 2:
-    if buscar_id(pedido[NUMERO_PEDIDO]):
+    if buscar_id(pedido[ID_CLIENTE]):
       print("------------------------------------")
-      for linea_cliente in lista_clientes:
-        if linea_cliente[0] == pedido[NUMERO_PEDIDO]:
-          print(f"{linea_cliente[1]}, id = ({linea_cliente[0]})")
-      for linea_pedido in lista_pedidos:
-        if linea_pedido[0] == pedido[NUMERO_PEDIDO]:
-          print(f"  {nombre_verdura(linea_pedido[1])}\t= {linea_pedido[2]}")
+      for linea_cliente in lector_lista_clientes:
+        if linea_cliente[CLIENTES_ID_CLIENTE] == pedido[ID_CLIENTE]:
+          print(f"{linea_cliente[CLIENTES_NOMBRE_CLIENTE]}, id = ({linea_cliente[CLIENTES_ID_CLIENTE]})")
+      for linea_pedido in lector_lista_pedidos:
+        if linea_pedido[PEDIDOS_ID_CLIENTE] == pedido[ID_CLIENTE]:
+          print(f"  {nombre_verdura(linea_pedido[PEDIDOS_VERDURA])}\t= {linea_pedido[PEDIDOS_CANT_VERDURA]}")
       print("------------------------------------")
     else:
       print("La id ingresada en incorrecta")
   else:
-    actual = 0
-    for linea_pedido in lista_pedidos:
-      if actual != linea_pedido[0]:
+    nombre_actual = 0
+    for linea_pedido in lector_lista_pedidos:
+      if nombre_actual != linea_pedido[PEDIDOS_ID_CLIENTE]:
         print("------------------------------------")
-        print(f"{buscar_nombre_id(linea_pedido[0])}, id = ({linea_pedido[0]})")
-        actual = linea_pedido[0]
+        print(f"{buscar_nombre_por_id(linea_pedido[PEDIDOS_ID_CLIENTE])}, id = ({linea_pedido[PEDIDOS_ID_CLIENTE]})")
+        nombre_actual = linea_pedido[PEDIDOS_ID_CLIENTE]
 
-      print(f"  {nombre_verdura(linea_pedido[1])}\t= {linea_pedido[2]}")
+      print(f"  {nombre_verdura(linea_pedido[PEDIDOS_VERDURA])}\t= {linea_pedido[PEDIDOS_CANT_VERDURA]}")
     print("------------------------------------")
 
   archivo_clientes.close()
   archivo_pedidos.close()
 
-def acciones_lista_pedidos(pedido):
-  if pedido[ACCION_PEDIDO] == "agregar":
+def acciones_pedido(pedido):
+  if pedido[ACCION_INGRESADA] == PALABRA_PARA_AGREGAR:
     if len(pedido) == 4:
       agregar(pedido) 
     else:
       print("Parametros para agregar incorrectos. Los correctos son:")
       print("python3 verduleria.py agregar (cantidad de verduras) (tipo de verdura) (nombre)")
-  elif pedido[ACCION_PEDIDO] == "modificar":
+  elif pedido[ACCION_INGRESADA] == PALABRA_PARA_MODIFICAR:
     if len(pedido) == 4:
       modificar(pedido) 
     else:
       print("Parametros para modificar incorrectos. Los correctos son:")
       print("python3 verduleria.py modificar (id del pedido) (cantidad del pedido) (verdura)")
-  elif pedido[ACCION_PEDIDO] == "eliminar":
+  elif pedido[ACCION_INGRESADA] == PALABRA_PARA_ELIMINAR:
     if len(pedido) == 2:
       eliminar(pedido)
     else:
       print("Parametros para eliminar incorrectos. Los correctos son:")
       print("python3 verduleria.py eliminar (id del pedido)")
-  elif pedido[ACCION_PEDIDO] == "listar":
+  elif pedido[ACCION_INGRESADA] == PALABRA_PARA_LISTAR:
     if len(pedido) <= 2:
       listar(pedido)
     else:
@@ -367,11 +376,12 @@ def acciones_lista_pedidos(pedido):
       print("python3 verduleria.py lista (id del pedido) \nel id es opcional, se usa para ver un pedido en espesifico")
   else:
     print("Accion enviada incorrecta. Las correctas son:")
-    print("agregar\nmodificar\neliminar\nlistar")
+    print(f"{PALABRA_PARA_AGREGAR}\n{PALABRA_PARA_MODIFICAR}\n{PALABRA_PARA_ELIMINAR}\n{PALABRA_PARA_LISTAR}")
   
 if __name__ == "__main__":
   pedido = sys.argv[1::]
-
-  inicializar_archivos()
-
-  acciones_lista_pedidos(pedido)
+  if len(pedido) < 1:
+    print("Ingrese una accion")
+  else:
+    inicializar_archivos()
+    acciones_pedido(pedido)
